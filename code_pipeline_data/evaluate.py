@@ -30,13 +30,12 @@ matplotlib.use("Agg")  # write PNG without needing a display
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from sklearn.metrics import (ConfusionMatrixDisplay, accuracy_score,
-                              classification_report, confusion_matrix,
-                              roc_curve)
+from sklearn.metrics import ConfusionMatrixDisplay, roc_curve
 from torch.utils.data import DataLoader
 
 from feature_dataset import FeatureDataset
-from metrics_utils import compute_metrics, per_class_auc
+from metrics_utils import (compute_metrics, confusion_matrix_torch,
+                           format_per_class_report, per_class_auc, per_class_prf)
 
 FEATURE_DIM = 512
 DROPOUT_P = 0.5  # must match train_classifier.py so the state_dict shapes line up
@@ -93,17 +92,20 @@ def main():
     y_true = np.concatenate(all_labels)
     y_prob = np.concatenate(all_probs)
 
-    acc = accuracy_score(y_true, y_pred)
+    metrics = compute_metrics(y_true, y_pred, y_prob, len(class_names))
+    acc = metrics["accuracy"]
     print(f"\nEvaluated {len(y_true)} clips from {args.features}")
     print(f"Accuracy: {acc:.4f}\n")
 
     # per-class precision/recall/F1 -- with 3 classes this tells you far
     # more than a single accuracy number, especially if classes are imbalanced
-    print(classification_report(y_true, y_pred, target_names=class_names,
-                                 zero_division=0))
+    per_class = per_class_prf(y_true, y_pred, class_names)
+    print(format_per_class_report(per_class))
+    print()
 
-    metrics = compute_metrics(y_true, y_pred, y_prob, len(class_names))
     class_auc = per_class_auc(y_true, y_prob, class_names)
+    print(f"Precision (macro): {metrics['precision_macro']:.4f}")
+    print(f"Recall (macro):    {metrics['recall_macro']:.4f}")
     print(f"F1 (macro):     {metrics['f1_macro']:.4f}")
     print(f"F1 (weighted):  {metrics['f1_weighted']:.4f}")
     print(f"ROC-AUC (macro, one-vs-rest): {metrics['roc_auc_macro']:.4f}")
@@ -112,7 +114,7 @@ def main():
         print(f"  {name:<12} ROC-AUC={a['roc_auc']:.4f}  PR-AUC={a['pr_auc']:.4f}")
     print()
 
-    cm = confusion_matrix(y_true, y_pred, labels=list(range(len(class_names))))
+    cm = confusion_matrix_torch(y_true, y_pred, len(class_names)).numpy()
     print("Confusion matrix (rows = true, cols = predicted):")
     print(cm)
 
@@ -149,14 +151,12 @@ def main():
 
     # all numbers in one file, so you can cite them in the written report
     # without re-running (and re-peeking at) the test set
-    report = classification_report(y_true, y_pred, target_names=class_names,
-                                   zero_division=0, output_dict=True)
     metrics_path = args.out_dir / "metrics.json"
     metrics_path.write_text(json.dumps({
         "features": str(args.features),
         "n_clips": int(len(y_true)),
         **metrics,
-        "per_class": {name: {**report[name], **class_auc[name]} for name in class_names},
+        "per_class": {name: {**per_class[name], **class_auc[name]} for name in class_names},
         "confusion_matrix": cm.tolist(),
     }, indent=2))
     print(f"saved -> {metrics_path}")
