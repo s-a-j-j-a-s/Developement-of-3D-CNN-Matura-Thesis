@@ -1,5 +1,5 @@
 """
-Reports loss, accuracy, macro F1 and ROC-AUC on train, val, AND test using the trained classifier --
+Reports loss, accuracy, macro precision, macro recall, macro F1 and ROC-AUC on train, val, AND test using the trained classifier --
 the overfitting check. Unlike plot_training_history.py, this can genuinely
 be run any time after training: it doesn't need anything that was only
 available while the loop was running. It just needs the three cached
@@ -60,7 +60,8 @@ def main():
                         # logged during training, this is a clean, comparable number
     criterion = torch.nn.CrossEntropyLoss()
 
-    print(f"{'split':<8} {'n':>5} {'loss':>8} {'accuracy':>9} {'F1':>7} {'ROC-AUC':>8}")
+    print(f"{'split':<8} {'n':>5} {'loss':>8} {'accuracy':>9} {'prec':>7} "
+          f"{'recall':>7} {'F1':>7} {'ROC-AUC':>8}")
     results = {}
     for split in ["train", "val", "test"]:
         path = Path(f"data/{split}_features.csv")
@@ -70,6 +71,7 @@ def main():
         r = evaluate_split(path, classifier, criterion, class_to_idx, device)
         results[split] = r
         print(f"{split:<8} {r['n']:>5} {r['loss']:>8.4f} {r['accuracy']:>9.3f} "
+              f"{r['precision_macro']:>7.3f} {r['recall_macro']:>7.3f} "
               f"{r['f1_macro']:>7.3f} {r['roc_auc_macro']:>8.3f}")
 
     Path("data/eval").mkdir(parents=True, exist_ok=True)

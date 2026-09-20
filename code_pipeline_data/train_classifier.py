@@ -19,11 +19,10 @@ import time
 from pathlib import Path
 
 import torch
-from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
 
 from feature_dataset import FeatureDataset
-from metrics_utils import compute_metrics
+from metrics_utils import compute_metrics, macro_f1
 
 FEATURE_DIM = 512      # r3d_18's penultimate layer output size, do not change unless the backbone does
 NUM_EPOCHS = 50
@@ -109,8 +108,7 @@ def main():
         val_acc = val_m["accuracy"]
         # train F1 from the argmax predictions collected during the epoch
         # (dropout ON, weights changing mid-epoch -> a rough number, like train_acc)
-        train_f1 = f1_score(torch.cat(train_true).numpy(), torch.cat(train_pred).numpy(),
-                            average="macro", zero_division=0)
+        train_f1 = macro_f1(torch.cat(train_true), torch.cat(train_pred), num_classes)
 
         print(f"epoch {epoch:3d}  train_loss={train_loss:.4f}  train_acc={train_acc:.3f}  "
               f"train_f1={train_f1:.3f}  val_loss={val_loss:.4f}  val_acc={val_acc:.3f}  "
@@ -120,6 +118,8 @@ def main():
             "epoch": epoch, "train_loss": train_loss, "train_acc": train_acc,
             "train_f1_macro": train_f1,
             "val_loss": val_loss, "val_acc": val_acc,
+            "val_precision_macro": val_m["precision_macro"],
+            "val_recall_macro": val_m["recall_macro"],
             "val_f1_macro": val_m["f1_macro"],
             "val_roc_auc_macro": val_m["roc_auc_macro"],
             "val_pr_auc_macro": val_m["pr_auc_macro"],
