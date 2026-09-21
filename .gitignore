@@ -6,5 +6,6 @@ code_pipeline_data/data/features/
 code_pipeline_data/data/processed/
 code_pipeline_data/data/*_features.csv
 code_pipeline_data/data/best_classifier.pt
+*.dvw
 
 desktop.ini
