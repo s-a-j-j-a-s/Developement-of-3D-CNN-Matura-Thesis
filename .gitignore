@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
-
+code_pipeline_data/data/raw/
+config.json
 volley_metrics_files/
 code_pipeline_data/data/features/
 code_pipeline_data/data/processed/
