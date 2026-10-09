@@ -17,6 +17,7 @@ import csv
 import json
 import time
 from pathlib import Path
+import argparse
 
 import torch
 from torch.utils.data import DataLoader
@@ -28,7 +29,9 @@ FEATURE_DIM = 512      # r3d_18's penultimate layer output size, do not change u
 NUM_EPOCHS = 50
 BATCH_SIZE = 16
 LR = 1e-3
-DROPOUT_P = 0.5
+DROPOUT_P = 0.5 
+SEED = 0
+WEIGHT_DECAY = 0.0
 PATIENCE = 5            # stop if val loss hasn't improved for this many epochs
 CKPT_PATH = Path("data/best_classifier.pt")
 HISTORY_PATH = Path("data/training_history.csv")     # per-epoch loss/acc/F1/ROC-AUC
@@ -36,11 +39,26 @@ SUMMARY_PATH = Path("data/training_summary.json")     # best epoch, wall time, e
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--weight_decay", type=float, default=WEIGHT_DECAY)
+    parser.add_argument("--out_dir", type=Path, default=Path("data"))
+    parser.add_argument("--train_features", type=Path, default=Path("data/train_features.csv"))
+    parser.add_argument("--val_features", type=Path, default=Path("data/val_features.csv"))
+    args = parser.parse_args()
+
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    ckpt_path = args.out_dir / "best_classifier.pt"
+    history_path = args.out_dir / "training_history.csv"
+    summary_path = args.out_dir / "training_summary.json"
+
+    torch.manual_seed(args.seed)
+    
     class_to_idx = json.loads(Path("data/class_to_idx.json").read_text())
     num_classes = len(class_to_idx)
-
-    train_ds = FeatureDataset("data/train_features.csv", class_to_idx)
-    val_ds = FeatureDataset("data/val_features.csv", class_to_idx)
+    
+    train_ds = FeatureDataset(args.train_features, class_to_idx)
+    val_ds = FeatureDataset(args.val_features, class_to_idx)
 
     train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=BATCH_SIZE, shuffle=False)
@@ -59,7 +77,7 @@ def main():
     ).to(device)
 
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(classifier.parameters(), lr=LR)
+    optimizer = torch.optim.Adam(classifier.parameters(), lr=LR, weight_decay=args.weight_decay)
 
     best_val_loss = float("inf")
     best_epoch = 0
@@ -126,7 +144,7 @@ def main():
         })
         # rewritten every epoch on purpose: if training crashes or gets killed
         # partway through, you still have every completed epoch on disk, not zero.
-        with open(HISTORY_PATH, "w", newline="") as f:
+        with open(history_path, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=history[0].keys())
             writer.writeheader()
             writer.writerows(history)
@@ -135,7 +153,7 @@ def main():
             best_val_loss = val_loss
             best_epoch = epoch
             epochs_without_improvement = 0
-            torch.save(classifier.state_dict(), CKPT_PATH)  # save only if val loss improved
+            torch.save(classifier.state_dict(), ckpt_path)  # save only if val loss improved
         else:
             epochs_without_improvement += 1
             if epochs_without_improvement >= PATIENCE:
@@ -144,7 +162,7 @@ def main():
         # ---- loop back to top for "next epoch" ----
 
     elapsed = time.time() - start_time
-    SUMMARY_PATH.write_text(json.dumps({
+    summary_path.write_text(json.dumps({
         "epochs_run": len(history),
         "epochs_planned": NUM_EPOCHS,
         "stopped_early": len(history) < NUM_EPOCHS,
@@ -155,11 +173,13 @@ def main():
         "best_val_roc_auc_macro": history[best_epoch - 1]["val_roc_auc_macro"],
         "wall_clock_seconds": round(elapsed, 1),
         "device": device,
+        "seed": args.seed,
+        "weight_decay": args.weight_decay,
     }, indent=2))
 
     print(f"\nTraining finished in {elapsed:.1f}s ({len(history)} epochs run). "
           f"Best val loss: {best_val_loss:.4f} at epoch {best_epoch}. "
-          f"Weights saved to {CKPT_PATH}, history saved to {HISTORY_PATH}")
+          f"Weights saved to {ckpt_path}, history saved to {history_path}")
 
 
 if __name__ == "__main__":
