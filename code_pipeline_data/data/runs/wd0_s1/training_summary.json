@@ -1,0 +1,14 @@
+{
+  "epochs_run": 34,
+  "epochs_planned": 50,
+  "stopped_early": true,
+  "best_epoch": 29,
+  "best_val_loss": 0.22473285297552745,
+  "best_val_acc": 0.9555555555555556,
+  "best_val_f1_macro": 0.9555555555555556,
+  "best_val_roc_auc_macro": 0.9985185185185186,
+  "wall_clock_seconds": 7.0,
+  "device": "cuda",
+  "seed": 1,
+  "weight_decay": 0.0
+}

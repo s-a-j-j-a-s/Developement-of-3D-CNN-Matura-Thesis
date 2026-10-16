@@ -1,0 +1,54 @@
+{
+  "features": "data\\folds\\3812\\test_features.csv",
+  "n_clips": 56,
+  "accuracy": 0.9285714285714286,
+  "precision_macro": 0.9506172839506174,
+  "recall_macro": 0.9222222222222222,
+  "f1_macro": 0.9315360501567399,
+  "f1_weighted": 0.9286856247201074,
+  "roc_auc_macro": 0.9863989187704095,
+  "pr_auc_macro": 0.9782777561069936,
+  "per_class": {
+    "reception": {
+      "precision": 0.8518518518518519,
+      "recall": 1.0,
+      "f1-score": 0.92,
+      "support": 23,
+      "roc_auc": 0.9868247694334651,
+      "pr_auc": 0.9819105630069713
+    },
+    "set": {
+      "precision": 1.0,
+      "recall": 0.8333333333333334,
+      "f1-score": 0.9090909090909091,
+      "support": 18,
+      "roc_auc": 0.9853801169590644,
+      "pr_auc": 0.976111111111111
+    },
+    "spike": {
+      "precision": 1.0,
+      "recall": 0.9333333333333333,
+      "f1-score": 0.9655172413793104,
+      "support": 15,
+      "roc_auc": 0.9869918699186992,
+      "pr_auc": 0.9768115942028985
+    }
+  },
+  "confusion_matrix": [
+    [
+      23,
+      0,
+      0
+    ],
+    [
+      3,
+      15,
+      0
+    ],
+    [
+      1,
+      0,
+      14
+    ]
+  ]
+}

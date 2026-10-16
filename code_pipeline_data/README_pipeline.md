@@ -15,15 +15,15 @@ data/raw/<klassenname>/<video_id>.mp4
 
 ```bash
 # 1. Erst klein testen
-#python trim_and_convert.py --config config.json --limit_per_class 2
-#python preview_clip.py data/processed/<klassenname>/<video_id>.npy
+python trim_and_convert.py --config config.json --limit_per_class 2
+python preview_clip.py data/processed/<klassenname>/<video_id>.npy
 
 # 2. Dann Preprocessing komplett
-#python trim_and_convert.py --config config.json
-#python split_dataset.py --manifest data/manifest.csv --out_dir data
+python trim_and_convert.py --config config.json
+python split_dataset.py --manifest data/manifest.csv --out_dir data
 
-# 3. Step 0 aus dem Trainingsdiagramm — genau EINMAL
-#python extract_features.py
+#3. Step 0 aus dem Trainingsdiagramm — genau EINMAL
+python extract_features.py
 
 # 4. Trainingsschleife — beliebig oft, während du Hyperparameter tunst
 python train_classifier.py
@@ -57,8 +57,7 @@ durchlaufen lässt.
 - `preview_clip.py` — visuelle Kontrolle eines verarbeiteten Clips (optional).
 
 **Training (Frozen Backbone)**
-- `video_dataset.py` — `VideoClipDataset` + Transforms. Wird von `extract_features.py`
-  importiert, nicht direkt ausgeführt.
+- `video_dataset.py` — `VideoClipDataset` + Transforms. Wird von `extract_features.py` importiert, nicht direkt ausgeführt.
 - `extract_features.py` — Step 0, läuft einmal. Friert R3D-18 ein (`fc` → `nn.Identity()`),
   schickt jeden Test-/Val-Clip einmal (deterministischer Center-Crop) und jeden Train-Clip
   `1 + N_AUGMENTED_COPIES` mal (Center-Crop + N zufällig gecroppte/geflippte Varianten)
