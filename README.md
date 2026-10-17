@@ -1,0 +1,10 @@
+# Development of a 3D CNN for Automated Recognition and Classification of Volleyball Movements
+Sarah Jordan, G22S, 2026
+The paper and all mentioned code can be found in this repository
+All necessary libraries and installations can be installed by using the following command: python -m pip install -r requirements.txt in the console.
+The file can be found in the code_pipeline_data folder.
+
+## Abstract
+Artificial Intelligence has experienced a considerable upturn in usage in professional sports, thus facilitating analysis and performance improvement. Volleyball, too, has started profiting from this development and is implementing more and more AI in daily practice as well as competition. It has increased efficiency in comparison to formerly practised manual input of data for scouting.
+This project focuses only on the first part of scouting: the recognition and classification of volleyball actions. A pipeline was developed to recognize and classify three different volleyball actions: reception, set and spike. A custom dataset of 300 clips was created from three matches with six recordings. All 300 clips were run through an R3D-18 network pretrained on the Kinetics-400 dataset in order to extract features. A small classifier head consisting of a dropout layer and a linear layer was added and trained to classify the three actions. The R3D-18 was frozen, so only the weights and biases of the head were updated, using CrossEntropyLoss and the Adam optimizer. The model reached an accuracy of $0.919 \pm 0.034$ on the held-out test set. Since this split contained clips from the same recordings on both sides of the net, the result was suspected to be too optimistic. Leave-one-recording-out cross-validation was therefore performed to see how the model would generalise to unseen recordings. The accuracy dropped to $0.854 \pm 0.090$, which shows that domain shift affects the model. The random split has therefore considerably overestimated the performance on this small, self-created dataset. It is necessary to split the data by recording in order to evaluate what the model actually learned.
+
